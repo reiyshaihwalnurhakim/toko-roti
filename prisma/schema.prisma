@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  username       String    @unique
+  email          String    @unique
+  password       String
+  phone          String?
+  role           String    @default("user") // "user" or "admin"
+  email_verified Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  orders         Order[]
+  customOrders   CustomOrder[]
+  reviews        Review[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  description String
+  price       Float
+  image       String?
+  status      String   @default("available") // "available", "out_of_stock"
+  createdAt   DateTime @default(now())
+
+  orderItems  OrderItem[]
+  reviews     Review[]
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  userId        String?
+  customerName  String?
+  customerPhone String?
+  paymentMethod String?
+  notes         String?
+  orderNumber   String   @unique
+  totalPrice    Float
+  status        String   @default("pending") // pending, processing, completed, cancelled
+  createdAt     DateTime @default(now())
+
+  user          User?    @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+  reviews       Review[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model CustomOrder {
+  id             String   @id @default(cuid())
+  userId         String?
+  customerName   String?
+  customerEmail  String?
+  customerPhone  String?
+  eventType      String
+  requiredDate   DateTime
+  cakeSize       String
+  flavor         String
+  theme          String?
+  color          String?
+  cakeText       String?
+  description    String?
+  referenceImage String?
+  estimatedPrice Float?
+  status         String   @default("pending") // pending, confirmed, processing, completed, cancelled
+  createdAt      DateTime @default(now())
+
+  user           User?    @relation(fields: [userId], references: [id])
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  userId        String?
+  customerName  String?
+  orderId       String?
+  productId     String
+  rating        Int
+  reviewText    String
+  photo         String?
+  verifiedBuyer Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user          User?    @relation(fields: [userId], references: [id])
+  order         Order?   @relation(fields: [orderId], references: [id])
+  product       Product  @relation(fields: [productId], references: [id])
+}
